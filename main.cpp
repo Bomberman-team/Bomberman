@@ -15,14 +15,14 @@ void draw_map();
 
  //Variaveis Globais
  int width = 208 * UPSCALE;;
- int height = 165 * UPSCALE;
+ int height = 176 * UPSCALE;
 
 int main(void)
 {
     map_create();
 	bool done = false;
-	int pos_x = width / 2;
-	int pos_y = height / 2;
+	int pos_x = 64;
+	int pos_y = 64;
 
 	ALLEGRO_DISPLAY *display = NULL;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -72,10 +72,10 @@ int main(void)
 				done = true;
 		}
 
-        ALLEGRO_BITMAP *imagem2;
-        imagem2 = al_load_bitmap("imagem.png");
-        al_convert_mask_to_alpha(imagem2,al_map_rgb(255,233,127));
-        al_draw_scaled_bitmap(imagem2,8,21,16,24,pos_x+10,pos_y+10,16*UPSCALE,15*UPSCALE,0);
+        ALLEGRO_BITMAP *player;
+        player = al_load_bitmap("Player.png");
+        al_convert_mask_to_alpha(player,al_map_rgb(255,0,255));
+        al_draw_scaled_bitmap(player,p1.wx,p1.wy,p1.w,p1.h,pos_x,pos_y,16*UPSCALE,16*UPSCALE,0);
         al_flip_display();
         al_clear_to_color(al_map_rgb(0,0,0));
         draw_map();

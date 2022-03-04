@@ -302,3 +302,14 @@
 
 1646354541 c:\users\administrator\desktop\codeblocks\bomberman\function.h
 
+1646376425 source:d:\bomberman_git\bomberman\main.cpp
+	<allegro5/allegro.h>
+	<allegro5/allegro_primitives.h>
+	<allegro5\allegro_image.h>
+	"Function.h"
+
+1646374481 d:\bomberman_git\bomberman\function.h
+	"Struct.h"
+
+1646376328 d:\bomberman_git\bomberman\struct.h
+
