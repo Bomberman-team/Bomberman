@@ -11,7 +11,7 @@ void tempo();
 void dtt_colid ();
 void colide ();
 void control ();
-void draw_map();
+void draw();
 
  //Variaveis Globais
  int width = 208 * UPSCALE;;
@@ -19,10 +19,11 @@ void draw_map();
 
 int main(void)
 {
+    srand(time(0));
     map_create();
 	bool done = false;
-	int pos_x = 64;
-	int pos_y = 64;
+	int pos_x = 70;
+	int pos_y = 30;
 
 	ALLEGRO_DISPLAY *display = NULL;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -73,12 +74,12 @@ int main(void)
 		}
 
         ALLEGRO_BITMAP *player;
-        player = al_load_bitmap("Player.png");
-        al_convert_mask_to_alpha(player,al_map_rgb(255,0,255));
-        al_draw_scaled_bitmap(player,p1.wx,p1.wy,p1.w,p1.h,pos_x,pos_y,16*UPSCALE,16*UPSCALE,0);
+        player = al_load_bitmap("imagem.png");
+        al_convert_mask_to_alpha(player,al_map_rgb(255,233,127));
+        al_draw_scaled_bitmap(player,p1.wx,p1.wy,p1.w,p1.h,pos_x,pos_y,p1.w*UPSCALE,p1.h*UPSCALE,0);
         al_flip_display();
         al_clear_to_color(al_map_rgb(0,0,0));
-        draw_map();
+        draw();
 	}
 	al_destroy_event_queue(event_queue);
 	al_destroy_display(display);						//destroy our display object
