@@ -3,10 +3,12 @@
 #include <allegro5\allegro_image.h>
 #include "Function.h"
 #define UPSCALE 4
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 #include <stdio.h>
 #define FPS 5
 
-enum KEYS{ UP, DOWN, LEFT, RIGHT};
+enum KEYS{ UP, DOWN, LEFT, RIGHT, SPACE};
 
  //Funções
 void map_create();
@@ -16,6 +18,8 @@ void dtt_colid ();
 void colide ();
 void control ();
 void draw();
+void b_bomb();
+
 
  //Variaveis Globais
 
@@ -24,9 +28,11 @@ int height = 176 * UPSCALE;
 int pos_x = 70;
 int pos_y = 30;
 bool done = false;
-bool keys[4] = {false, false, false, false};
+bool keys[5] = {false, false, false, false, false};
 int sai = 0;
 int drc = 1;
+static bool k = false;
+extern char map [11][13];
 ALLEGRO_BITMAP *player;
 
 
@@ -35,7 +41,7 @@ int main(void)
 
     ALLEGRO_DISPLAY *display = NULL;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
-	ALLEGRO_TIMER *timer = NULL;
+	ALLEGRO_FONT *font18 = NULL;
 
     map_create();
 
@@ -47,25 +53,26 @@ int main(void)
 	if(!display)										//test display object
 		return -1;
 
-    timer = al_create_timer(1.0 / FPS);
-
 	al_init_primitives_addon();
 	al_install_keyboard();
 	al_init_image_addon();
+	al_init_font_addon();
 
 	event_queue = al_create_event_queue();
 
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
 	al_register_event_source(event_queue, al_get_display_event_source(display));
-	al_register_event_source(event_queue, al_get_timer_event_source(timer));
+    font18 = al_load_font("c:/windows/fonts/arial.ttf", 18, 0);
 
-	al_start_timer(timer);
-
+    if(!font18)    {                                    //test display object
+        return -1;
+    }
 	while(!done)
 	{
-		int face = p1.wx + (p1.frame/2) * p1.w + drc*96;
-
+		int face = p1.wx + (p1.frame) * p1.w + drc*96;
 		draw();
+		//al_draw_textf(font18, al_map_rgb(255,255,255),20,20,0,"%d",p1.x/16)*UPSCALE);
+
 		ALLEGRO_EVENT ev;
 		al_wait_for_event(event_queue, &ev);
 
@@ -89,6 +96,11 @@ int main(void)
 					keys[LEFT] = true;
 					drc = 3;
 					break;
+                case ALLEGRO_KEY_SPACE:
+                    keys[SPACE] = true;
+                    b_bomb();
+                    break;
+
 			}
 		}
 		else if(ev.type == ALLEGRO_EVENT_KEY_UP)
@@ -107,6 +119,9 @@ int main(void)
 				case ALLEGRO_KEY_LEFT:
 					keys[LEFT] = false;
 					break;
+                case ALLEGRO_KEY_SPACE:
+                    keys[SPACE] = false;
+                    break;
 				case ALLEGRO_KEY_ESCAPE:
 					done = true;
 					break;
@@ -120,12 +135,12 @@ int main(void)
 		if (keys[UP] == true || keys[DOWN] == true || keys[LEFT] == true || keys[RIGHT] == true) p1.frame++;
 		if(p1.frame > 5) p1.frame = 0;
 
-		printf("%d",p1.frame);
+        printf("%i",(p1.y/(16*4)));
 
-        for(int k = 0; k <=4; k++){
-            printf("%d ", keys[k]);
+        //for(int k = 0; k <=4; k++){
+            //printf("%d ", keys[k]);
 
-        }
+        //}
         printf("\n");
 
 		p1.y -= keys[UP] * 5;
@@ -133,9 +148,10 @@ int main(void)
 		p1.x -= keys[LEFT] * 5;
 		p1.x += keys[RIGHT] * 5;
 
+
         player = al_load_bitmap("move_sprite.png");
         al_convert_mask_to_alpha(player,al_map_rgb(255,233,127));
-        al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,70+p1.x,20+p1.y,p1.w*UPSCALE,p1.h*UPSCALE,0);
+        al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,0+p1.x,0+p1.y,p1.w*UPSCALE,p1.h*UPSCALE,0);
         al_flip_display();
 
 

@@ -18,7 +18,7 @@ void map_create(){
     }
 map[1][1]=0;
 map[1][2]=0;
-map[2][1]=3;
+map[2][1]=0;
 map[8][11]=0;
 map[9][10]=0;
 map[9][11]=0;
@@ -40,5 +40,12 @@ void draw(){
         }
     }
 }
+void b_bomb(){
+    for(int x=0; x < 13; x++){
+            for(int y=0; y < 11; y++){
+                    map [((p1.y+(12*UPSCALE)) /(16*UPSCALE))][((p1.x+(8*UPSCALE))/(16*UPSCALE))] = 3;
 
 
+        }
+    }
+}
