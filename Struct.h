@@ -1,7 +1,9 @@
 //Estruturas
 
+// wx = posição em X, wy = posição em Y, w = largura, h = altura, id = identificação
+
 struct obj {int wx, wy ,w, h, x, y, frame, timer, id, life;};
-struct obj p1 = {8,21,16,24,0,0,0,0,0,0},
+struct obj p1 = {0,0,16,24,0,0,0,0,0,0},
 p2 = {},
 hard_wall= {0,0,16,16,0,0,0,0,0,0},
 soft_wall = {34,0,16,16,0,0,0,0,0,0},
