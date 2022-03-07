@@ -4,6 +4,7 @@
 #include "Function.h"
 #define UPSCALE 4
 #include <stdio.h>
+#define FPS 5
 
 enum KEYS{ UP, DOWN, LEFT, RIGHT};
 
@@ -28,11 +29,13 @@ int sai = 0;
 int drc = 1;
 ALLEGRO_BITMAP *player;
 
+
 int main(void)
 {
 
     ALLEGRO_DISPLAY *display = NULL;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
+	ALLEGRO_TIMER *timer = NULL;
 
     map_create();
 
@@ -44,6 +47,8 @@ int main(void)
 	if(!display)										//test display object
 		return -1;
 
+    timer = al_create_timer(1.0 / FPS);
+
 	al_init_primitives_addon();
 	al_install_keyboard();
 	al_init_image_addon();
@@ -52,15 +57,18 @@ int main(void)
 
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
 	al_register_event_source(event_queue, al_get_display_event_source(display));
+	al_register_event_source(event_queue, al_get_timer_event_source(timer));
+
+	al_start_timer(timer);
 
 	while(!done)
 	{
-		int face = p1.wx + (p1.frame/3) * p1.w + drc*96;
+		int face = p1.wx + (p1.frame/2) * p1.w + drc*96;
 
 		draw();
 		ALLEGRO_EVENT ev;
 		al_wait_for_event(event_queue, &ev);
-        al_rest(0.02);
+
 		if(ev.type == ALLEGRO_EVENT_KEY_DOWN)
 			{
 			switch(ev.keyboard.keycode)
@@ -72,17 +80,14 @@ int main(void)
 				case ALLEGRO_KEY_DOWN:
 					keys[DOWN] = true;
 					drc = 1;
-					p1.frame++;
 					break;
 				case ALLEGRO_KEY_RIGHT:
 					keys[RIGHT] = true;
 					drc = 2;
-					p1.frame++;
 					break;
 				case ALLEGRO_KEY_LEFT:
 					keys[LEFT] = true;
 					drc = 3;
-					p1.frame++;
 					break;
 			}
 		}
@@ -115,19 +120,25 @@ int main(void)
 		if (keys[UP] == true || keys[DOWN] == true || keys[LEFT] == true || keys[RIGHT] == true) p1.frame++;
 		if(p1.frame > 5) p1.frame = 0;
 
-
 		printf("%d",p1.frame);
 
-		pos_y -= keys[UP] * 4;
-		pos_y += keys[DOWN] * 4;
-		pos_x -= keys[LEFT] * 4;
-		pos_x += keys[RIGHT] * 4;
+        for(int k = 0; k <=4; k++){
+            printf("%d ", keys[k]);
+
+        }
+        printf("\n");
+
+		p1.y -= keys[UP] * 5;
+		p1.y += keys[DOWN] * 5;
+		p1.x -= keys[LEFT] * 5;
+		p1.x += keys[RIGHT] * 5;
 
         player = al_load_bitmap("move_sprite.png");
         al_convert_mask_to_alpha(player,al_map_rgb(255,233,127));
-        al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,pos_x,pos_y,p1.w*UPSCALE,p1.h*UPSCALE,0);
+        al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,70+p1.x,20+p1.y,p1.w*UPSCALE,p1.h*UPSCALE,0);
         al_flip_display();
-        al_clear_to_color(al_map_rgb(0,0,0));
+
+
 	}
 
 	al_destroy_event_queue(event_queue);
