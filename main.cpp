@@ -6,7 +6,7 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
 #include <stdio.h>
-#define FPS 5
+#define FPS 60
 
 enum KEYS{ UP, DOWN, LEFT, RIGHT, SPACE};
 
@@ -20,9 +20,8 @@ void control ();
 void draw();
 void b_bomb();
 
-
  //Variaveis Globais
-
+bool redraw = false;
 int width = 208 * UPSCALE;
 int height = 176 * UPSCALE;
 int pos_x = 70;
@@ -30,11 +29,9 @@ int pos_y = 30;
 bool done = false;
 bool keys[5] = {false, false, false, false, false};
 int sai = 0;
-int drc = 1;
+extern int drc = 1;
 static bool k = false;
-extern char map [11][13];
 ALLEGRO_BITMAP *player;
-
 
 int main(void)
 {
@@ -42,6 +39,7 @@ int main(void)
     ALLEGRO_DISPLAY *display = NULL;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 	ALLEGRO_FONT *font18 = NULL;
+	ALLEGRO_TIMER *timer = NULL;
 
     map_create();
 
@@ -49,6 +47,7 @@ int main(void)
 		return -1;
 
 	display = al_create_display(width, height);			//create our display object
+    timer = al_create_timer(1.0/FPS);
 
 	if(!display)										//test display object
 		return -1;
@@ -62,7 +61,10 @@ int main(void)
 
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
 	al_register_event_source(event_queue, al_get_display_event_source(display));
+    al_register_event_source(event_queue, al_get_timer_event_source(timer));
     font18 = al_load_font("c:/windows/fonts/arial.ttf", 18, 0);
+
+    al_start_timer (timer);
 
     if(!font18)    {                                    //test display object
         return -1;
@@ -70,7 +72,7 @@ int main(void)
 	while(!done)
 	{
 		int face = p1.wx + (p1.frame) * p1.w + drc*96;
-		draw();
+
 		//al_draw_textf(font18, al_map_rgb(255,255,255),20,20,0,"%d",p1.x/16)*UPSCALE);
 
 		ALLEGRO_EVENT ev;
@@ -131,30 +133,34 @@ int main(void)
 		{
 			done = true;
 		}
+		if(ev.type== ALLEGRO_EVENT_TIMER){
+            redraw=true;
+		}
 
 		if (keys[UP] == true || keys[DOWN] == true || keys[LEFT] == true || keys[RIGHT] == true) p1.frame++;
 		if(p1.frame > 5) p1.frame = 0;
 
-        printf("%i",(p1.y/(16*4)));
+        if(redraw && al_event_queue_is_empty(event_queue)){
+            draw();
 
-        //for(int k = 0; k <=4; k++){
+            //printf("%i",(p1.y/(16*4)));
+
+            //for(int k = 0; k <=4; k++){
             //printf("%d ", keys[k]);
 
-        //}
-        printf("\n");
+            //}
 
-		p1.y -= keys[UP] * 5;
-		p1.y += keys[DOWN] * 5;
-		p1.x -= keys[LEFT] * 5;
-		p1.x += keys[RIGHT] * 5;
+            p1.y -= keys[UP] * 5;
+            p1.y += keys[DOWN] * 5;
+            p1.x -= keys[LEFT] * 5;
+            p1.x += keys[RIGHT] * 5;
 
-
-        player = al_load_bitmap("move_sprite.png");
-        al_convert_mask_to_alpha(player,al_map_rgb(255,233,127));
-        al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,0+p1.x,0+p1.y,p1.w*UPSCALE,p1.h*UPSCALE,0);
-        al_flip_display();
-
-
+            colide();
+            player = al_load_bitmap("move_sprite.png");
+            al_convert_mask_to_alpha(player,al_map_rgb(255,233,127));
+            al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,p1.x,p1.y,p1.w*UPSCALE,p1.h*UPSCALE,0);
+            al_flip_display();
+        }
 	}
 
 	al_destroy_event_queue(event_queue);
@@ -162,3 +168,25 @@ int main(void)
 
 	return 0;
 }
+
+
+//Funcao
+
+void colide (){
+    for(int x=0; x < 13; x++){
+        for(int y=0; y < 11; y++){int i= dtt_colid(p1.x, p1.y, p1.w*UPSCALE, 64, x*16*UPSCALE, y*16*UPSCALE, 16*UPSCALE, 16*UPSCALE);
+            printf("%d", i);
+            if(dtt_colid(p1.x, p1.y+(8*4), p1.w*UPSCALE, 64, x*16*UPSCALE, y*16*UPSCALE, 16*UPSCALE, 16*UPSCALE)){
+                if(map[y][x] == 1 || map[y][x] == 2 || map[y][x] == 3){
+                    switch (drc){
+                    case 0: p1.y += 5; break;
+                   /* case 1: p1.y -= 5; break;
+                    case 2: p1.x -= 5; break;
+                    case 3: p1.x += 5; break;*/
+                    }
+                }
+            }
+        }
+    }
+}
+
