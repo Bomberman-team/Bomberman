@@ -1,5 +1,6 @@
 #include "Struct.h"
 #define UPSCALE 4
+
 char map [11][13];
 
 //Funções
@@ -22,12 +23,10 @@ map[9][11]=0;
 }
 
 void draw(){
-
         ALLEGRO_BITMAP *tiles;
         ALLEGRO_BITMAP *bomb_a;
         tiles = al_load_bitmap("image_tiles.png");
         bomb_a = al_load_bitmap("sprite_bomb.png");
-
         for(int x=0; x < 13; x++){
             for(int y=0; y < 11; y++){
                 switch(map[y][x]){
@@ -41,24 +40,21 @@ void draw(){
 }
 
 void b_bomb(){
-
     for(int x=0; x < 13; x++){
             for(int y=0; y < 11; y++){
 
-                        bomb.x = ((p1.x+(8*UPSCALE))/(16*UPSCALE));
-                        bomb.y = ((p1.y+(21*UPSCALE))/(16*UPSCALE));
-
-                        map [((p1.y+(21*UPSCALE)) /(16*UPSCALE))][((p1.x+(8*UPSCALE))/(16*UPSCALE))] = 3;
-
-                    }
-                }
+                    bomb.x = ((p1.x+(8*UPSCALE))/(16*UPSCALE));
+                    bomb.y = ((p1.y+(21*UPSCALE))/(16*UPSCALE));
+                    map [((p1.y+(21*UPSCALE)) /(16*UPSCALE))][((p1.x+(8*UPSCALE))/(16*UPSCALE))] = 3;
             }
+    }
+}
 
 bool dtt_colid (int Ax, int Ay, int Aw, int Ah, int Bx, int By, int Bw, int Bh) {
     if(Ax + Aw >= Bx && Ax <= Bx + Bw && Ay + Ah >= By && Ay <= By + Bh || (Ax + Aw >= Bx && Ax <= Bx + Bw && !Ay && !Ah && !By && !Bh)){
         return 1;
     }
-    return 0;
+	return 0;
 }
 void tempo_bomba(){
 
@@ -78,6 +74,5 @@ void tempo_bomba(){
 
     }
 }
-
 
 
