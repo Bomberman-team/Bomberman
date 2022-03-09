@@ -5,6 +5,12 @@ char map [11][13];
 
 //Funções
 
+/* Criação do Mapa por meio de uma matriz 13x11 que pode assumir os valores 0,1,2 e 3.
+0 = Chão
+1 = Blocos quebráveis
+2 = Blocos Indestrutíveis
+3= Bomba */
+
 void map_create(){
     for(int x=0; x < 13; x++){
         for(int y=0; y < 11; y++){
@@ -56,6 +62,7 @@ bool dtt_colid (int Ax, int Ay, int Aw, int Ah, int Bx, int By, int Bw, int Bh) 
     }
 	return 0;
 }
+
 void tempo_bomba(){
 
     if(bomb.timer > 0){
@@ -74,5 +81,4 @@ void tempo_bomba(){
 
     }
 }
-
 

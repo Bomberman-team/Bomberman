@@ -1,13 +1,13 @@
+#include <stdio.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5\allegro_image.h>
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
-#include "Function.h"
-#define UPSCALE 4
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
-#include <stdio.h>
+#include "Function.h"
+#define UPSCALE 4
 #define FPS 60
 
 enum KEYS{ UP, DOWN, LEFT, RIGHT, SPACE};
@@ -35,27 +35,41 @@ bool keys[5] = {false, false, false, false, false};
 int sai = 0;
 extern int drc = 1;
 static bool k = false;
-ALLEGRO_BITMAP *player;
-ALLEGRO_SAMPLE *song;
+
 
 int main(void)
 {
-    srand(time(0));
+    srand(time(0));                                  //Randomização do Mapa
+
+    //Ponteiros
+
     ALLEGRO_DISPLAY *display = NULL;
+    ALLEGRO_BITMAP *player;
+    ALLEGRO_SAMPLE *song;
+    //ALLEGRO_SAMPLE_INSTANCE *inst_song = NULL;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 	ALLEGRO_FONT *font18 = NULL;
 	ALLEGRO_TIMER *timer = NULL;
+	/*song = al_load_sample("Bomberman-Theme.wav");
+	inst_song = al_create_sample_instance(song);
+	al_attach_sample_instance_to_mixer(inst_song, al_get_default_mixer());
+	al_set_sample_instance_playmode(inst_song, ALLEGRO_PLAYMODE_LOOP);
+	al_set_sample_instance_gain(inst_song, 0.8);*/
 
     map_create();
 
-	if(!al_init())										//initialize Allegro
+	if(!al_init())
 		return -1;
 
-	display = al_create_display(width, height);			//create our display object
+    //Criação de Display e Timer
+
+	display = al_create_display(width, height);
     timer = al_create_timer(1.0/FPS);
 
-	if(!display)										//test display object
+	if(!display)										//Teste de Display
 		return -1;
+
+    //Add-ons e Instalações
 
 	al_init_primitives_addon();
 	al_install_keyboard();
@@ -68,6 +82,8 @@ int main(void)
 
 	event_queue = al_create_event_queue();
 
+    //Registro de Sources
+
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
 	al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
@@ -75,13 +91,12 @@ int main(void)
 
     al_start_timer (timer);
 
-    if(!font18)    {                                    //test display object
+    if(!font18)    {
         return -1;
     }
 	while(!done)
 	{
 		int face = p1.wx + (p1.frame/8) * p1.w + drc*96;
-
 		tempo_bomba();
 
 		//al_draw_textf(font18, al_map_rgb(255,255,255),20,20,0,"%d",p1.x/16)*UPSCALE);
@@ -160,40 +175,40 @@ int main(void)
 		if(p1.frame > 40) p1.frame = 0;
 
         if(redraw && al_event_queue_is_empty(event_queue)){
+            al_play_sample(song, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP,0);
             draw();
-
-            //printf("%i",(p1.y/(16*4)));
-
-            //for(int k = 0; k <=4; k++){
-            //printf("%d ", keys[k]);
-
-            //}
-
-
-
             colide();
             player = al_load_bitmap("move_sprite.png");
             al_convert_mask_to_alpha(player,al_map_rgb(255,233,127));
             al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,p1.x,p1.y,p1.w*UPSCALE,p1.h*UPSCALE,0);
-            al_draw_rectangle(p1.x+12, p1.y+48, p1.x+12+ hb_p1.w*4, p1.y+48+ hb_p1.h*4, al_map_rgb(255,255,255),4);
+            //al_draw_rectangle(p1.x+12, p1.y+48, p1.x+12+ hb_p1.w*4, p1.y+48+ hb_p1.h*4, al_map_rgb(255,255,255),4);
             al_flip_display();
         }
 	}
 
+	//Finalizador
+
 	al_destroy_event_queue(event_queue);
-	al_destroy_display(display);						//destroy our display object
+	al_destroy_display(display);
+	al_destroy_timer(timer);
+	al_destroy_sample(song);
+    //al_destroy_sample_instance(inst_song);
+
 
 	return 0;
 }
 
-
 //Funcao
 
-void colide (){
+void control (){
     p1.y -= keys[UP] * 4;
     p1.y += keys[DOWN] * 4;
     p1.x -= keys[LEFT] * 4;
     p1.x += keys[RIGHT] * 4;
+}
+
+void colide (){
+    control ();
     for(int x=0; x < 13; x++){
         for(int y=0; y < 11; y++){
             if(map[y][x] == 1 || map[y][x] == 2 || map[y][x] == 3){
