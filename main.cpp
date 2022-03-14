@@ -1,17 +1,18 @@
-#include <stdio.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5\allegro_image.h>
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
+#define UPSCALE 4
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
-#define UPSCALE 4
+#include <stdio.h>
 #define FPS 60
 
 enum KEYS{ UP, DOWN, LEFT, RIGHT, SPACE};
 
  //Funções
+
 void map_create();
 void sair();
 void tempo();
@@ -19,7 +20,7 @@ void dtt_colid ();
 void colide ();
 void control ();
 void draw();
-void b_bomb();
+void set_bomb();
 void tempo_bomba();
 void tempo_fire();
 
@@ -34,11 +35,12 @@ p2 = {},
 hard_wall = {0,0,16,16,0,0,0,0,0,0},
 soft_wall = {34,0,16,16,0,0,0,0,0,0},
 floor = {17,0,16,16,0,0,0,0,0,0},
-bomb = {0,0,16,16,-1,-1,0,90,0,0},
+bomb = {0,0,16,16,-1,-1,0,0,0,0},
 fire = {0,0,16,16,-1,-1,0,0,0,0},
 end_wall {};
 
- //Variaveis Globais
+//Variaveis Globais
+
 int inside_bomb= -1;
 bool redraw = false;
 int width = 208 * UPSCALE;
@@ -51,13 +53,13 @@ int sai = 0;
 int drc = 1;
 static bool k = false;
 char map [11][13];
+bool b_bomb = false;
 
 ALLEGRO_BITMAP *player;
 ALLEGRO_SAMPLE *song;
 ALLEGRO_BITMAP *tiles;
 ALLEGRO_BITMAP *bomb_a;
 ALLEGRO_BITMAP *fire_a;
-
 
 int main(void)
 {
@@ -70,7 +72,6 @@ int main(void)
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 	ALLEGRO_FONT *font18 = NULL;
 	ALLEGRO_TIMER *timer = NULL;
-
 
     map_create();
 
@@ -143,7 +144,9 @@ int main(void)
 	{
 
 		printf("%d %d \n ", fire.timer, bomb.timer);
+
 		int face = p1.wx + (p1.frame/8) * p1.w + drc*96;
+
 		tempo_bomba();
         tempo_fire();
 
@@ -175,7 +178,7 @@ int main(void)
                 case ALLEGRO_KEY_SPACE:
                     keys[SPACE] = true;
                     if(bomb.timer==0){
-                    b_bomb();
+                    set_bomb();
                     bomb.timer = 90;
                     }
                     int x = (p1.x+8*UPSCALE)/(16*UPSCALE), y= (p1.y+21*UPSCALE)/(16*UPSCALE);
@@ -224,11 +227,13 @@ int main(void)
 
         if(redraw && al_event_queue_is_empty(event_queue)){
             al_play_sample(song, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP,0);
+
+            control ();
             draw();
             colide();
+
             al_convert_mask_to_alpha(player,al_map_rgb(255,233,127));
             al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,p1.x,p1.y,p1.w*UPSCALE,p1.h*UPSCALE,0);
-            //al_draw_rectangle(p1.x+12, p1.y+48, p1.x+12+ hb_p1.w*4, p1.y+48+ hb_p1.h*4, al_map_rgb(255,255,255),4);
             al_flip_display();
         }
 	}
@@ -245,25 +250,30 @@ int main(void)
 	return 0;
 }
 
+
 //Funcoes
 
 void control (){
+
     p1.y -= keys[UP] * 4;
     p1.y += keys[DOWN] * 4;
-    p1.x -= keys[LEFT]
-    * 4;
+    p1.x -= keys[LEFT]* 4;
     p1.x += keys[RIGHT] * 4;
+
 }
 
 bool dtt_colid (int Ax, int Ay, int Aw, int Ah, int Bx, int By, int Bw, int Bh) {
     if(Ax + Aw >= Bx && Ax <= Bx + Bw && Ay + Ah >= By && Ay <= By + Bh || (Ax + Aw >= Bx && Ax <= Bx + Bw && !Ay && !Ah && !By && !Bh)){
+
         return 1;
+
     }
+
 	return 0;
 }
 
 void colide (){
-    control ();
+
     for(int x=0; x < 13; x++){
         for(int y=0; y < 11; y++){
             if(map[y][x] == 1 || map[y][x] == 2 || map[y][x] == 3){
@@ -292,15 +302,15 @@ void draw(){
                     case 1:al_draw_scaled_bitmap(tiles,hard_wall.wx,hard_wall.wy,hard_wall.w,hard_wall.h,hard_wall.w*x*UPSCALE,hard_wall.h*y*UPSCALE,hard_wall.w*UPSCALE,hard_wall.h*UPSCALE,0); break;
                     case 2:al_draw_scaled_bitmap(tiles,soft_wall.wx,soft_wall.wy,soft_wall.w,soft_wall.h,soft_wall.w*x*UPSCALE,soft_wall.h*y*UPSCALE,soft_wall.w*UPSCALE,soft_wall.h*UPSCALE,0); break;
                     case 3:al_draw_scaled_bitmap(bomb_a,bomb.wx,bomb.wy,bomb.w,bomb.h,bomb.w*x*UPSCALE,bomb.h*y*UPSCALE,bomb.w*UPSCALE,bomb.h*UPSCALE,0); break;
-                    case 4:al_draw_rectangle(fire.x, fire.y, fire.x+fire.w, fire.y+fire.h, al_map_rgb(255,255,255),5); break;
+                    case 4:al_draw_scaled_bitmap(fire_a,fire.wx,fire.wy,fire.w,fire.h,fire.w*x*UPSCALE,fire.h*y*UPSCALE,fire.w*UPSCALE,fire.h*UPSCALE,0); break;
 
                         //al_draw_scaled_bitmap(fire_a,fire.wx,fire.wy,fire.w,fire.h,fire.w*x*UPSCALE,fire.h*y*UPSCALE,fire.w*UPSCALE,fire.h*UPSCALE,0); break;
                 }
             }
         }
-}
+    }
 
-void b_bomb(){
+void set_bomb(){
     for(int x=0; x < 13; x++){
             for(int y=0; y < 11; y++){
                     bomb.x = ((p1.x+(8*UPSCALE))/(16*UPSCALE));
@@ -341,39 +351,38 @@ void tempo_bomba(){
     if(bomb.timer > 0){
 
         bomb.wx = (bomb.timer/30) * bomb.w + bomb.frame;
+        if(b_bomb) bomb.timer = 2;
         bomb.timer--;
 
     }
-    if(bomb.timer==0){
-
-        fire.timer  = 20;
+    if(bomb.timer==1 || b_bomb){
 
         map[bomb.y][bomb.x]= 4;
         if (map[bomb.y+1][bomb.x] != 1) map[bomb.y+1][bomb.x] = 4;
         if (map[bomb.y-1][bomb.x] != 1) map[bomb.y-1][bomb.x] = 4;
         if (map[bomb.y][bomb.x+1] != 1) map[bomb.y][bomb.x+1] = 4;
         if (map[bomb.y][bomb.x-1] != 1) map[bomb.y][bomb.x-1] = 4;
-
-
+        fire.timer  = 28;
 
     }
 }
+
 void tempo_fire(){
 
-    if(bomb.timer > 0){
+    if(fire.timer){
 
-        //fire.wx = (fire.timer/5)*fire.w + fire.frame;
-
+        fire.wx = (fire.timer/7)*fire.w + fire.frame;
         fire.timer--;
 
     }
-    if(fire.timer==0){
 
-    map[bomb.y][bomb.x]= 0;
+    if(fire.timer == 1){
+
+        map[bomb.y][bomb.x]= 0;
         if (map[bomb.y+1][bomb.x] != 1) map[bomb.y+1][bomb.x] = 0;
         if (map[bomb.y-1][bomb.x] != 1) map[bomb.y-1][bomb.x] = 0;
         if (map[bomb.y][bomb.x+1] != 1) map[bomb.y][bomb.x+1] = 0;
         if (map[bomb.y][bomb.x-1] != 1) map[bomb.y][bomb.x-1] = 0;
-    }
 
+    }
 }
