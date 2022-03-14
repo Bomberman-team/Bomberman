@@ -37,18 +37,9 @@
 			<Add option="-fexceptions" />
 			<Add directory="C:/allegro/include" />
 		</Compiler>
-		<Unit filename="Function.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="Struct.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
-			<code_completion />
-			<envvars />
-			<debugger />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

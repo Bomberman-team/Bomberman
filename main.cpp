@@ -250,8 +250,7 @@ int main(void)
 void control (){
     p1.y -= keys[UP] * 4;
     p1.y += keys[DOWN] * 4;
-    p1.x -= keys[LEFT]
-    * 4;
+    p1.x -= keys[LEFT] * 4;
     p1.x += keys[RIGHT] * 4;
 }
 
@@ -292,7 +291,7 @@ void draw(){
                     case 1:al_draw_scaled_bitmap(tiles,hard_wall.wx,hard_wall.wy,hard_wall.w,hard_wall.h,hard_wall.w*x*UPSCALE,hard_wall.h*y*UPSCALE,hard_wall.w*UPSCALE,hard_wall.h*UPSCALE,0); break;
                     case 2:al_draw_scaled_bitmap(tiles,soft_wall.wx,soft_wall.wy,soft_wall.w,soft_wall.h,soft_wall.w*x*UPSCALE,soft_wall.h*y*UPSCALE,soft_wall.w*UPSCALE,soft_wall.h*UPSCALE,0); break;
                     case 3:al_draw_scaled_bitmap(bomb_a,bomb.wx,bomb.wy,bomb.w,bomb.h,bomb.w*x*UPSCALE,bomb.h*y*UPSCALE,bomb.w*UPSCALE,bomb.h*UPSCALE,0); break;
-                    case 4:al_draw_rectangle(fire.x, fire.y, fire.x+fire.w, fire.y+fire.h, al_map_rgb(255,255,255),5); break;
+                    case 4:al_draw_scaled_bitmap(fire_a,fire.wx,fire.wy,fire.w,fire.h,fire.w*x*UPSCALE,fire.h*y*UPSCALE,fire.w*UPSCALE,fire.h*UPSCALE,0); break;
 
                         //al_draw_scaled_bitmap(fire_a,fire.wx,fire.wy,fire.w,fire.h,fire.w*x*UPSCALE,fire.h*y*UPSCALE,fire.w*UPSCALE,fire.h*UPSCALE,0); break;
                 }
@@ -358,11 +357,12 @@ void tempo_bomba(){
 
     }
 }
+
 void tempo_fire(){
 
-    if(bomb.timer > 0){
+    if(fire.timer > 0){
 
-        //fire.wx = (fire.timer/5)*fire.w + fire.frame;
+        fire.wx = (fire.timer/5)*fire.w + fire.frame;
 
         fire.timer--;
 
