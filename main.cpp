@@ -1,6 +1,6 @@
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
-#include <allegro5\allegro_image.h>
+#include <allegro5/allegro_image.h>
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
 #define UPSCALE 4
@@ -23,21 +23,20 @@ void draw();
 void set_bomb();
 void tempo_bomba();
 void tempo_fire();
+int kill_bomb();
 
 //Estruturas
 
 // wx = posição em X(sprite), wy = posição em Y(sprite), w = largura, h = altura, id = identificação
 
 struct obj {int wx, wy ,w, h, x, y, frame, timer, id, life;};
-struct obj p1 = {0,0,16,24,64,40,0,0,0,0},
-hb_p1 = {0,0,10,10,(p1.x+4),(p1.y+40),0,0,0,0}, //teste
-p2 = {},
-hard_wall = {0,0,16,16,0,0,0,0,0,0},
-soft_wall = {34,0,16,16,0,0,0,0,0,0},
-floor = {17,0,16,16,0,0,0,0,0,0},
-bomb = {0,0,16,16,-1,-1,0,0,0,0},
-fire = {0,0,16,16,-1,-1,0,0,0,0},
-end_wall {};
+struct obj p1 = {0,0,16,24,64,40,40,0,0,5},
+hb_p1 =         {0,0,10,10,(p1.x+4),(p1.y+40),0,0,0,0},
+hard_wall =     {0,0,16,16,0,0,0,0,0,0},
+soft_wall =     {34,0,16,16,0,0,0,0,0,0},
+floor =         {17,0,16,16,0,0,0,0,0,0},
+bomb =          {0,0,16,16,-1,-1,0,0,0,0},
+fire =          {0,0,16,16,0,0,0,0,0,0};
 
 //Variaveis Globais
 
@@ -54,12 +53,16 @@ int drc = 1;
 static bool k = false;
 char map [11][13];
 bool b_bomb = false;
+bool hit_bomb = false;
+int inside_fire = -1;
 
 ALLEGRO_BITMAP *player;
 ALLEGRO_SAMPLE *song;
 ALLEGRO_BITMAP *tiles;
 ALLEGRO_BITMAP *bomb_a;
 ALLEGRO_BITMAP *fire_a;
+ALLEGRO_BITMAP *enemy_a;
+ALLEGRO_BITMAP *death_a;
 
 int main(void)
 {
@@ -114,6 +117,8 @@ int main(void)
     bomb_a = al_load_bitmap("sprite_bomb.png");
     song = al_load_sample("Bomberman-Theme.wav");
     fire_a = al_load_bitmap("sprite_fire.png");
+    enemy_a = al_load_bitmap("sprite_enemy.png");
+    death_a = al_load_bitmap("player_death.png");
 	inst_song = al_create_sample_instance(song);
 	al_attach_sample_instance_to_mixer(inst_song, al_get_default_mixer());
 	al_set_sample_instance_playmode(inst_song, ALLEGRO_PLAYMODE_LOOP);
@@ -143,12 +148,15 @@ int main(void)
 	while(!done)
 	{
 
-		printf("%d %d \n ", fire.timer, bomb.timer);
+
 
 		int face = p1.wx + (p1.frame/8) * p1.w + drc*96;
 
 		tempo_bomba();
         tempo_fire();
+        kill_bomb();
+        sair();
+
 
 		//al_draw_textf(font18, al_map_rgb(255,255,255),20,20,0,"%d",p1.x/16)*UPSCALE);
 
@@ -179,7 +187,8 @@ int main(void)
                     keys[SPACE] = true;
                     if(bomb.timer==0){
                     set_bomb();
-                    bomb.timer = 90;
+
+
                     }
                     int x = (p1.x+8*UPSCALE)/(16*UPSCALE), y= (p1.y+21*UPSCALE)/(16*UPSCALE);
                     inside_bomb = x+y*13;
@@ -226,14 +235,15 @@ int main(void)
 		if(p1.frame > 40) p1.frame = 0;
 
         if(redraw && al_event_queue_is_empty(event_queue)){
-            al_play_sample(song, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP,0);
+            al_play_sample(song, 0.1, 0.0, 1, ALLEGRO_PLAYMODE_LOOP,0);
 
-            control ();
+            control();
             draw();
             colide();
 
             al_convert_mask_to_alpha(player,al_map_rgb(255,233,127));
             al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,p1.x,p1.y,p1.w*UPSCALE,p1.h*UPSCALE,0);
+            al_draw_filled_rectangle(0, 15, 15 * p1.life * 2, 25, al_map_rgb(255, 0, 0));
             al_flip_display();
         }
 	}
@@ -250,8 +260,15 @@ int main(void)
 	return 0;
 }
 
+//Funções
 
-//Funcoes
+/* Criação do Mapa por meio de uma matriz 13x11 que pode assumir os valores 0,1,2,3 e 4.
+0 = Chão
+1 = Blocos quebráveis
+2 = Blocos Indestrutíveis
+3= Bomba
+4= Fogo */
+
 
 void control (){
 
@@ -265,7 +282,7 @@ void control (){
 bool dtt_colid (int Ax, int Ay, int Aw, int Ah, int Bx, int By, int Bw, int Bh) {
     if(Ax + Aw >= Bx && Ax <= Bx + Bw && Ay + Ah >= By && Ay <= By + Bh || (Ax + Aw >= Bx && Ax <= Bx + Bw && !Ay && !Ah && !By && !Bh)){
 
-        return 1;
+    return 1;
 
     }
 
@@ -281,14 +298,17 @@ void colide (){
                     if (map[y][x] == 3 && x+y*13 == inside_bomb){
                         continue;
                     }
+
                     p1.y += keys[UP] * 4;
                     p1.y -= keys[DOWN] * 4;
                     p1.x += keys[LEFT] * 4;
                     p1.x -= keys[RIGHT] * 4;
+
                 }
-                else if (map[y][x] == 3 && x+y*13 == inside_bomb){
+
+                    else if (map[y][x] == 3 && x+y*13 == inside_bomb){
                     inside_bomb = -1;
-                }
+                    }
             }
         }
     }
@@ -304,30 +324,22 @@ void draw(){
                     case 3:al_draw_scaled_bitmap(bomb_a,bomb.wx,bomb.wy,bomb.w,bomb.h,bomb.w*x*UPSCALE,bomb.h*y*UPSCALE,bomb.w*UPSCALE,bomb.h*UPSCALE,0); break;
                     case 4:al_draw_scaled_bitmap(fire_a,fire.wx,fire.wy,fire.w,fire.h,fire.w*x*UPSCALE,fire.h*y*UPSCALE,fire.w*UPSCALE,fire.h*UPSCALE,0); break;
 
-                        //al_draw_scaled_bitmap(fire_a,fire.wx,fire.wy,fire.w,fire.h,fire.w*x*UPSCALE,fire.h*y*UPSCALE,fire.w*UPSCALE,fire.h*UPSCALE,0); break;
                 }
             }
         }
     }
 
 void set_bomb(){
+
+    bomb.timer = 90;
     for(int x=0; x < 13; x++){
             for(int y=0; y < 11; y++){
                     bomb.x = ((p1.x+(8*UPSCALE))/(16*UPSCALE));
                     bomb.y = ((p1.y+(21*UPSCALE))/(16*UPSCALE));
                     map [((p1.y+(21*UPSCALE)) /(16*UPSCALE))][((p1.x+(8*UPSCALE))/(16*UPSCALE))] = 3;
             }
+        }
     }
-}
-
-
-//Funções
-
-/* Criação do Mapa por meio de uma matriz 13x11 que pode assumir os valores 0,1,2 e 3.
-0 = Chão
-1 = Blocos quebráveis
-2 = Blocos Indestrutíveis
-3= Bomba */
 
 void map_create(){
     for(int x=0; x < 13; x++){
@@ -344,6 +356,7 @@ map[2][1]=0;
 map[8][11]=0;
 map[9][10]=0;
 map[9][11]=0;
+
 }
 
 void tempo_bomba(){
@@ -355,7 +368,7 @@ void tempo_bomba(){
         bomb.timer--;
 
     }
-    if(bomb.timer==1 || b_bomb){
+    if(bomb.timer==1){
 
         map[bomb.y][bomb.x]= 4;
         if (map[bomb.y+1][bomb.x] != 1) map[bomb.y+1][bomb.x] = 4;
@@ -384,5 +397,41 @@ void tempo_fire(){
         if (map[bomb.y][bomb.x+1] != 1) map[bomb.y][bomb.x+1] = 0;
         if (map[bomb.y][bomb.x-1] != 1) map[bomb.y][bomb.x-1] = 0;
 
+
+
     }
 }
+
+int kill_bomb(){
+
+      for(int x=0; x < 13; x++){
+        for(int y=0; y < 11; y++){
+            if(map[y][x] == 4){
+                if(dtt_colid(p1.x+12, p1.y+48, 10*UPSCALE, 10*UPSCALE, x*16*UPSCALE, y*16*UPSCALE, 16*UPSCALE, 16*UPSCALE)){
+
+                    if(bomb.timer == 1){
+                        hit_bomb = true;
+
+                    }
+                    if(bomb.timer == 1 && hit_bomb){
+                        p1.life--;
+                        printf ("vida do personagem %d \r", p1.life);
+
+                    }
+                    hit_bomb = false;
+                }
+            }
+        }
+    }
+}
+
+void sair(){
+
+    if(p1.life <= 0){
+
+        exit(0);
+    }
+}
+
+
+

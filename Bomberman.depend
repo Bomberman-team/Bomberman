@@ -315,13 +315,12 @@
 
 1646779062 ated upstream
 
-1646779298 source:c:\users\administrator\documents\github\bomberman\main.cpp
+1647278898 source:c:\users\administrator\documents\github\bomberman\main.cpp
 	<allegro5/allegro.h>
 	<allegro5/allegro_primitives.h>
 	<allegro5\allegro_image.h>
 	<allegro5/allegro_audio.h>
 	<allegro5/allegro_acodec.h>
-	"Function.h"
 	<allegro5/allegro_font.h>
 	<allegro5/allegro_ttf.h>
 	<stdio.h>
