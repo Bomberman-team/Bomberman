@@ -9,7 +9,7 @@
 #include <stdio.h>
 #define FPS 60
 
-enum KEYS{ UP, DOWN, LEFT, RIGHT, SPACE};
+enum KEYS{ UP, DOWN, LEFT, RIGHT, SPACE, ENTER};
 
  //Funções
 
@@ -24,6 +24,8 @@ void set_bomb();
 void tempo_bomba();
 void tempo_fire();
 int kill_bomb();
+void create_enemy();
+void draw_enemy();
 
 //Estruturas
 
@@ -38,6 +40,8 @@ floor =         {17,0,16,16,0,0,0,0,0,0},
 bomb =          {0,0,16,16,-1,-1,0,0,0,0},
 fire =          {0,0,16,16,0,0,0,1,0,0};
 
+struct eny {int wx, wy ,w, h, x, y, dir, frame, timer, id, life; bool l, r, d, u;} enemy[5];
+
 //Variaveis Globais
 
 int inside_bomb= -1;
@@ -47,14 +51,14 @@ int height = 176 * UPSCALE;
 int pos_x = 70;
 int pos_y = 30;
 bool done = false;
-bool keys[5] = {false, false, false, false, false};
+bool keys[6] = {false, false, false, false, false, false};
 int sai = 0;
 int drc = 1;
 static bool k = false;
 char map [11][13];
-bool b_bomb = false;
 bool hit_bomb = false;
 int inside_fire = -1;
+bool dtt_menu;
 
 ALLEGRO_BITMAP *player;
 ALLEGRO_SAMPLE *song;
@@ -63,6 +67,8 @@ ALLEGRO_BITMAP *bomb_a;
 ALLEGRO_BITMAP *fire_a;
 ALLEGRO_BITMAP *enemy_a;
 ALLEGRO_BITMAP *death_a;
+ALLEGRO_BITMAP *menu;
+ALLEGRO_FONT *font18 = NULL;
 
 int main(void)
 {
@@ -73,7 +79,7 @@ int main(void)
     ALLEGRO_DISPLAY *display = NULL;
     ALLEGRO_SAMPLE_INSTANCE *inst_song = NULL;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
-	ALLEGRO_FONT *font18 = NULL;
+
 	ALLEGRO_TIMER *timer = NULL;
 
     map_create();
@@ -96,6 +102,7 @@ int main(void)
 	al_install_keyboard();
 	al_init_image_addon();
 	al_init_font_addon();
+	al_init_ttf_addon();
 	al_install_audio ();
 	al_init_acodec_addon ();
 
@@ -111,7 +118,7 @@ int main(void)
 
     //Carregamento
 
-    font18 = al_load_font("c:/windows/fonts/arial.ttf", 18, 0);
+    font18 = al_load_ttf_font("game_over.ttf", 29*UPSCALE, 0);
     player = al_load_bitmap("move_sprite.png");
     tiles = al_load_bitmap("image_tiles.png");
     bomb_a = al_load_bitmap("sprite_bomb.png");
@@ -119,6 +126,7 @@ int main(void)
     fire_a = al_load_bitmap("sprite_fire.png");
     enemy_a = al_load_bitmap("sprite_enemy.png");
     death_a = al_load_bitmap("player_death.png");
+    menu = al_load_bitmap("menu.png");
 	inst_song = al_create_sample_instance(song);
 	al_attach_sample_instance_to_mixer(inst_song, al_get_default_mixer());
 	al_set_sample_instance_playmode(inst_song, ALLEGRO_PLAYMODE_LOOP);
@@ -155,6 +163,9 @@ int main(void)
         kill_bomb();
         sair();
 
+        create_enemy();
+        draw_enemy();
+
 
 		//al_draw_textf(font18, al_map_rgb(255,255,255),20,20,0,"%d",p1.x/16)*UPSCALE);
 
@@ -165,6 +176,11 @@ int main(void)
 			{
 			switch(ev.keyboard.keycode)
 			{
+
+				case ALLEGRO_KEY_ENTER:
+					keys[ENTER] = true;
+					dtt_menu =! dtt_menu;
+					break;
 				case ALLEGRO_KEY_UP:
 					keys[UP] = true;
 					drc = 0;
@@ -189,6 +205,7 @@ int main(void)
                     int x = (p1.x+8*UPSCALE)/(16*UPSCALE), y= (p1.y+21*UPSCALE)/(16*UPSCALE);
                     inside_bomb = x+y*13;
                     break;
+
 			}
 		}
 		else if(ev.type == ALLEGRO_EVENT_KEY_UP)
@@ -233,15 +250,34 @@ int main(void)
         if(redraw && al_event_queue_is_empty(event_queue)){
             al_play_sample(song, 0.1, 0.0, 1, ALLEGRO_PLAYMODE_LOOP,0);
 
+        if(dtt_menu){
+
             control();
             draw();
             colide();
 
+
             al_convert_mask_to_alpha(player,al_map_rgb(255,233,127));
             al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,p1.x,p1.y,p1.w*UPSCALE,p1.h*UPSCALE,0);
-            al_draw_filled_rounded_rectangle(0, 15, 15 * p1.life * 2, 40, 7,7, al_map_rgb(255, 0, 0));
+            al_draw_filled_rectangle(p1.x-15, p1.y-15, p1.x+75, p1.y, al_map_rgb(240, 247, 108));
+            al_draw_filled_rectangle(p1.x-15, p1.y-15, (p1.x-25) + (10 * p1.life * 2), p1.y, al_map_rgb(255, 0, 0));
+
+            sair();
 
             al_flip_display();
+
+
+            }
+
+            if(dtt_menu==false){
+
+            al_draw_scaled_bitmap(menu, 0,0,890,508,0,0,width,height,0);
+            al_draw_text(font18, al_map_rgb(0,0,0), (width/2)+3, height/2, ALLEGRO_ALIGN_CENTER, "Press ENTER!" );
+            al_draw_text(font18, al_map_rgb(255,242,0), width/2, height/2, ALLEGRO_ALIGN_CENTER, "Press ENTER!" );
+
+            al_flip_display();
+
+        }
         }
 	}
 
@@ -328,8 +364,10 @@ void draw(){
 
 void set_bomb(){
 
+    if(fire.timer>0) return;
     if (bomb.timer==0) bomb.timer = NULL;
     bomb.timer = 90;
+
     for(int x=0; x < 13; x++){
             for(int y=0; y < 11; y++){
                     if(!fire.timer){
@@ -342,12 +380,22 @@ void set_bomb(){
     }
 
 void map_create(){
+    int enemy_pos = 0, pEny = 4;
     for(int x=0; x < 13; x++){
         for(int y=0; y < 11; y++){
             if(x==0 || x==12 || y==0 || y==10 || (x>1 && x<11 && !(x % 2) && (y>1 && y<9 && !(y % 2)))) {
                 map[y][x]=1;
             }
-        else map [y][x] = (rand() % 2) * 2 ;
+                else if((rand() % 2) && enemy_pos < 5 && (x != 1 && y != 1) && (x != 2 && y != 1) && (x != 2 && y != 1)){
+                    map [y][x] = 0;
+                    if(x== pEny+2){
+                        enemy[enemy_pos].x = x*16*UPSCALE;
+                        enemy[enemy_pos].y = y*16*UPSCALE;
+                        enemy_pos++;
+                        pEny+= 5;
+                    }
+                }
+                    else map [y][x] = (rand() % 2) * 2 ;
         }
     }
 map[1][1]=0;
@@ -364,7 +412,6 @@ void tempo_bomba(){
     if(bomb.timer > 0){
 
         bomb.wx = (bomb.timer/30) * bomb.w + bomb.frame;
-        if(b_bomb) bomb.timer = 2;
         bomb.timer--;
 
     }
@@ -423,11 +470,30 @@ int kill_bomb(){
 
 void sair(){
 
-    if(p1.life == 0){
+    if(p1.life <= 0){
 
-        exit(0);
+        al_clear_to_color(al_map_rgb(0,0,0));
+        al_draw_text(font18, al_map_rgb(255,242,0), width/2, height/2, ALLEGRO_ALIGN_CENTER, "GAME OVER!" );
+
     }
 }
+void create_enemy(){
+    for(int i=0; i<5;i++){
+        enemy[i].dir = 0;
+        enemy[i].wx = 0;
+        enemy[i].wy = 0;
+        enemy[i].l = true;
+        enemy[i].u = true;
+        enemy[i].r = false;
+        enemy[i].d = false;
+    }
+}
+void draw_enemy(){
 
-
-
+    for(int i=0; i<5;i++){
+            if (enemy[i].frame++ == 38 ){
+    int face_enemy = enemy[i].wx + (enemy[i].frame/10)*34 + enemy[i].dir*94;
+    al_draw_scaled_bitmap(enemy_a, face_enemy, enemy[i].wy, 31, 34, enemy[i].x, enemy[i].y, width*UPSCALE, height*UPSCALE,0 );
+        }
+    }
+}
