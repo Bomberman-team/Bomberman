@@ -1,11 +1,11 @@
-#include <allegro5/allegro.h>
-#include <allegro5/allegro_primitives.h>
-#include <allegro5/allegro_image.h>
-#include <allegro5/allegro_audio.h>
-#include <allegro5/allegro_acodec.h>
+#include <allegro5\allegro.h>
+#include <allegro5\allegro_primitives.h>
+#include <allegro5\allegro_image.h>
+#include <allegro5\allegro_audio.h>
+#include <allegro5\allegro_acodec.h>
 #define UPSCALE 4
-#include <allegro5/allegro_font.h>
-#include <allegro5/allegro_ttf.h>
+#include <allegro5\allegro_font.h>
+#include <allegro5\allegro_ttf.h>
 #include <stdio.h>
 #define FPS 60
 
@@ -36,7 +36,7 @@ hard_wall =     {0,0,16,16,0,0,0,0,0,0},
 soft_wall =     {34,0,16,16,0,0,0,0,0,0},
 floor =         {17,0,16,16,0,0,0,0,0,0},
 bomb =          {0,0,16,16,-1,-1,0,0,0,0},
-fire =          {0,0,16,16,0,0,0,0,0,0};
+fire =          {0,0,16,16,0,0,0,1,0,0};
 
 //Variaveis Globais
 
@@ -148,8 +148,6 @@ int main(void)
 	while(!done)
 	{
 
-
-
 		int face = p1.wx + (p1.frame/8) * p1.w + drc*96;
 
 		tempo_bomba();
@@ -187,8 +185,6 @@ int main(void)
                     keys[SPACE] = true;
                     if(bomb.timer==0){
                     set_bomb();
-
-
                     }
                     int x = (p1.x+8*UPSCALE)/(16*UPSCALE), y= (p1.y+21*UPSCALE)/(16*UPSCALE);
                     inside_bomb = x+y*13;
@@ -243,7 +239,8 @@ int main(void)
 
             al_convert_mask_to_alpha(player,al_map_rgb(255,233,127));
             al_draw_scaled_bitmap(player,face,p1.wy,p1.w,p1.h,p1.x,p1.y,p1.w*UPSCALE,p1.h*UPSCALE,0);
-            al_draw_filled_rectangle(0, 15, 15 * p1.life * 2, 25, al_map_rgb(255, 0, 0));
+            al_draw_filled_rounded_rectangle(0, 15, 15 * p1.life * 2, 40, 7,7, al_map_rgb(255, 0, 0));
+
             al_flip_display();
         }
 	}
@@ -272,10 +269,10 @@ int main(void)
 
 void control (){
 
-    p1.y -= keys[UP] * 4;
-    p1.y += keys[DOWN] * 4;
-    p1.x -= keys[LEFT]* 4;
-    p1.x += keys[RIGHT] * 4;
+    p1.y -= keys[UP] * 3;
+    p1.y += keys[DOWN] * 3;
+    p1.x -= keys[LEFT]* 3;
+    p1.x += keys[RIGHT] * 3;
 
 }
 
@@ -299,10 +296,10 @@ void colide (){
                         continue;
                     }
 
-                    p1.y += keys[UP] * 4;
-                    p1.y -= keys[DOWN] * 4;
-                    p1.x += keys[LEFT] * 4;
-                    p1.x -= keys[RIGHT] * 4;
+                    p1.y += keys[UP] * 3;
+                    p1.y -= keys[DOWN] * 3;
+                    p1.x += keys[LEFT] * 3;
+                    p1.x -= keys[RIGHT] * 3;
 
                 }
 
@@ -331,12 +328,15 @@ void draw(){
 
 void set_bomb(){
 
+    if (bomb.timer==0) bomb.timer = NULL;
     bomb.timer = 90;
     for(int x=0; x < 13; x++){
             for(int y=0; y < 11; y++){
+                    if(!fire.timer){
                     bomb.x = ((p1.x+(8*UPSCALE))/(16*UPSCALE));
                     bomb.y = ((p1.y+(21*UPSCALE))/(16*UPSCALE));
                     map [((p1.y+(21*UPSCALE)) /(16*UPSCALE))][((p1.x+(8*UPSCALE))/(16*UPSCALE))] = 3;
+                }
             }
         }
     }
@@ -397,8 +397,6 @@ void tempo_fire(){
         if (map[bomb.y][bomb.x+1] != 1) map[bomb.y][bomb.x+1] = 0;
         if (map[bomb.y][bomb.x-1] != 1) map[bomb.y][bomb.x-1] = 0;
 
-
-
     }
 }
 
@@ -408,7 +406,6 @@ int kill_bomb(){
         for(int y=0; y < 11; y++){
             if(map[y][x] == 4){
                 if(dtt_colid(p1.x+12, p1.y+48, 10*UPSCALE, 10*UPSCALE, x*16*UPSCALE, y*16*UPSCALE, 16*UPSCALE, 16*UPSCALE)){
-
                     if(bomb.timer == 1){
                         hit_bomb = true;
 
@@ -416,7 +413,6 @@ int kill_bomb(){
                     if(bomb.timer == 1 && hit_bomb){
                         p1.life--;
                         printf ("vida do personagem %d \r", p1.life);
-
                     }
                     hit_bomb = false;
                 }
@@ -427,7 +423,7 @@ int kill_bomb(){
 
 void sair(){
 
-    if(p1.life <= 0){
+    if(p1.life == 0){
 
         exit(0);
     }
